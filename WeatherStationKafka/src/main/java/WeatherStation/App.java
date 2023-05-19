@@ -22,23 +22,22 @@ public class App
     {
     	
     	Properties properties = new Properties();
-    	properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-    	"127.0.0.1:9092");
+		String bootstrapServers = System.getenv("KAFKA_BOOTSTRAP_SERVERS"); // Or retrieve from args array
+		properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     	properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
     	StringSerializer.class.getName());
     	properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
     	StringSerializer.class.getName());
+
     	
     	KafkaProducer<String,String> producer = new KafkaProducer<>(properties);
         
         // Call sendWeatherStatus for each station instance
+		WeatherStationMock station = new WeatherStationMock(1);
         while (true) {
-        	for(int i=1 ;i<=10 ;i++)
-        	{
-        		 WeatherStationMock station = new WeatherStationMock(i);
-        		 station.sendWeatherStatus();
-        		 sendToKafka(station , producer);
-        	}
+			station.sendWeatherStatus();
+			sendToKafka(station , producer);
+
             
             try {
                 Thread.sleep(1000);  // wait 1 second between sending messages
