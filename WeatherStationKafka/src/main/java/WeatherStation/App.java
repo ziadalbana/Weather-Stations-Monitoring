@@ -20,17 +20,24 @@ public class App
 	
     public static void main( String[] args ) throws InterruptedException
     {
-    	
-    	Properties properties = new Properties();
-		String bootstrapServers = System.getenv("KAFKA_BOOTSTRAP_SERVERS"); // Or retrieve from args array
-		properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-    	properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-    	StringSerializer.class.getName());
-    	properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-    	StringSerializer.class.getName());
 
-    	
-    	KafkaProducer<String,String> producer = new KafkaProducer<>(properties);
+//    	Properties properties = new Properties();
+//		String bootstrapServers = System.getenv("KAFKA_BOOTSTRAP_SERVERS"); // Or retrieve from args array
+//		properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+//    	properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+//    	StringSerializer.class.getName());
+//    	properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+//    	StringSerializer.class.getName());
+//
+//
+//    	KafkaProducer<String,String> producer = new KafkaProducer<>(properties);
+
+
+		Properties properties = new Properties();
+		properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
+		properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+		properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+		KafkaProducer<String,String> producer = new KafkaProducer<>(properties);
         
         // Call sendWeatherStatus for each station instance
 		WeatherStationMock station = new WeatherStationMock(1);
