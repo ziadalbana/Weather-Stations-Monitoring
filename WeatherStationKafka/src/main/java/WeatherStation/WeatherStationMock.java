@@ -27,6 +27,8 @@ public class WeatherStationMock {
     public void sendWeatherStatus() {
         // Randomly change battery status
         int batteryStatusChance = random.nextInt(100);
+        this.stationId = random.nextInt(1001);
+        this.statusTimestamp = System.currentTimeMillis() / 1000L;
         if (batteryStatusChance < 30) {
             batteryStatus = "low";
         } else if (batteryStatusChance < 70) {
