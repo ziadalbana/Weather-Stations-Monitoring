@@ -1,5 +1,7 @@
 package com.example.Central.station;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.KStream;
 import org.springframework.context.annotation.Bean;
@@ -30,8 +32,15 @@ public class Streamer {
     private boolean someFilterCondition(String key, String value) {
         // Define your filtering logic here
         // Return true to keep the message, or false to drop it
-        System.out.println("streamer: "+value);
-        return true;
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            StationData stationData = objectMapper.readValue(value, StationData.class);
+            int humidity=stationData.getWeather().getHumidity();
+            if (humidity>70) return true;
+            else return false;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
