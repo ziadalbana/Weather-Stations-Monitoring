@@ -5,6 +5,9 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -34,33 +37,28 @@ public class Consumer {
 
            int station_id = stationData.getStationId();
 
-           if(station_id < 1 || station_id > 10){ // wrong station_id
-               return;
-           }
 
            bitcask.put(String.valueOf(stationData.getStationId()), msg);
 
-           if(stations_records.containsKey(station_id)){
-               stations_records.get(station_id).add(stationData);
-           }else{
-               stations_records.put(station_id, new LinkedList<>());
-               stations_records.get(station_id).add(stationData);
-           }
+           List<StationData> records = stations_records.getOrDefault(station_id, new LinkedList<>());
+           records.add(stationData);
+           stations_records.put(station_id, records);
 
            this.number_of_msg++;
 
-           if(this.number_of_msg < 10_000)
+           if(this.number_of_msg < 30)
                return;
 
            // write to parquet
-           for (int i = 1; i <= 10; i++) {
-               if (!stations_records.containsKey(i)) continue;
+           for (Integer id : stations_records.keySet()) {
+               //if (!stations_records.containsKey(id)) continue;
 
-               List<StationData> records = stations_records.get(i);
-               stations_records.get(i).clear();
+               records = stations_records.get(id);
+               if(records.isEmpty())
+                   continue;
 
                if (records.size() == 1) {
-                   parquet.write(getFileNameFromTimestamp(records.get(0).getStatusTimestamp()) + "_" + i, records);
+                   parquet.write(getFileNameFromTimestamp(records.get(0).getStatusTimestamp()) + "_" + id, records);
                }
 
                records.sort(Comparator.comparingLong(StationData::getStatusTimestamp));
@@ -74,7 +72,7 @@ public class Consumer {
                    if (start.equals(cur)) {
                        r++;
                    } else {
-                       parquet.write(start + "_" + i, records.subList(l, r));
+                       parquet.write(start + "_" + id, records.subList(l, r));
                        l = r;
                        start = getFileNameFromTimestamp(records.get(l).getStatusTimestamp());
                        r++;
@@ -82,12 +80,13 @@ public class Consumer {
                }
 
                if (l != records.size() - 1) {
-                   parquet.write(start + "_" + i, records.subList(l, r));
+                   parquet.write(start + "_" + id, records.subList(l, r));
                }
+
+               stations_records.get(id).clear();
            }
 
-
-
+           this.number_of_msg = 0;
 
 
        } catch (Exception e) {
@@ -97,8 +96,10 @@ public class Consumer {
    }
 
     public String getFileNameFromTimestamp(long timestamp) {
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
-        Date date = new Date(timestamp);
-        return dateFormatter.format(date);
+        LocalDateTime dateTime = LocalDateTime.ofEpochSecond(timestamp, 0, ZoneOffset.UTC);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH");
+        //System.out.println(formattedDateTime);
+        return dateTime.format(formatter);
     }
+
 }
