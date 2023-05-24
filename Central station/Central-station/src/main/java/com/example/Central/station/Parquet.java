@@ -37,7 +37,7 @@ public class Parquet {
 
     public  void write(String fileName, List<StationData> records) {
 
-        try (ParquetWriter<StationData> writer = AvroParquetWriter.<StationData>builder(new Path(this.directory + "/" + fileName))
+        try (ParquetWriter<StationData> writer = AvroParquetWriter.<StationData>builder(new Path(this.directory + "/" + fileName + ".parquet"))
                 .withSchema(ReflectData.AllowNull.get().getSchema(StationData.class))
                 .withDataModel(ReflectData.get())
                 .withConf(new Configuration())
