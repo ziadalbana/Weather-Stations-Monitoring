@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-producer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-producer
+  template:
+    metadata:
+      labels:
+        app: kafka-producer
+    spec:
+      containers:
+        - name: kafka-producer
+          image: ziadalbana/weather-station:1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            # Add any environment variables required by your Kafka producer
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value:  "kafka-service:9092"
+          # Add any other configuration specific to your Kafka producer container
+---
+

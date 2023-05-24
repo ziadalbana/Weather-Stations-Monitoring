@@ -46,11 +46,11 @@ public class App
 			sendToKafka(station , producer);
 
             
-            try {
-                Thread.sleep(1000);  // wait 1 second between sending messages
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                Thread.sleep(1000);  // wait 1 second between sending messages
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 }
