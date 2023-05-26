@@ -1,5 +1,6 @@
 package com.example.Central.station;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -22,14 +23,22 @@ public class Consumer {
     Parquet parquet = new Parquet("./archive");
     Bitcask bitcask = new Bitcask("./store");
 
+    int droppedMsg = 0;
+    int droppedFileNum=0;
+    Parquet droppedParquet = new Parquet("./DroppedArchive");
+    List<StationData> droppedRecords=new ArrayList<>();
+    int alertMsg = 0;
+    int alertFileNum =0;
+    Parquet alertParquet = new Parquet("./AlertArchive");
+    List<StationData> alertRecords =new ArrayList<>();
+
    @KafkaListener(topics = "station",
            groupId = "springboot",
            properties = {
            "bootstrap.servers=127.0.0.1:9092"
            }
    )
-    public void consume(String msg){
-       System.out.println("message :"+ msg);
+    public void BasicConsume(String msg){
 
        try {
            ObjectMapper objectMapper = new ObjectMapper();
@@ -100,6 +109,60 @@ public class Consumer {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH");
         //System.out.println(formattedDateTime);
         return dateTime.format(formatter);
+    }
+
+    @KafkaListener(topics = "dropped",
+            groupId = "springboot",
+            properties = {
+                    "bootstrap.servers=127.0.0.1:9092"
+            }
+    )
+    public void droppedConsume(String msg){
+        System.out.println("dropped"+msg+ "num"+droppedMsg);
+        ObjectMapper objectMapper = new ObjectMapper();
+        StationData stationData = null;
+        try {
+            stationData = objectMapper.readValue(msg, StationData.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        droppedRecords.add(stationData);
+
+        this.droppedMsg++;
+
+        if(this.droppedMsg < 50)
+            return;
+        droppedParquet.write(String.valueOf(droppedFileNum++),droppedRecords);
+        droppedRecords.clear();
+        this.droppedMsg=0;
+
+    }
+
+    @KafkaListener(topics = "alert",
+            groupId = "springboot",
+            properties = {
+                    "bootstrap.servers=127.0.0.1:9092"
+            }
+    )
+    public void consume(String msg){
+        System.out.println(msg);
+        ObjectMapper objectMapper = new ObjectMapper();
+        StationData stationData = null;
+        try {
+            stationData = objectMapper.readValue(msg, StationData.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        alertRecords.add(stationData);
+
+        this.alertMsg++;
+
+        if(this.alertMsg < 50)
+            return;
+        alertParquet.write(String.valueOf(alertFileNum++), alertRecords);
+        alertRecords.clear();
+        this.alertMsg =0;
+
     }
 
 }

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: central-station
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: central-station
+  template:
+    metadata:
+      labels:
+        app: central-station
+    spec:
+      containers:
+        - name: writer-container
+          image: ziadalbana/central-station:4.0
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /shared-directory
+          env:
+            # Add any environment variables required by your Kafka consumer
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-service:9092"
+            - name: KAFKA_TOPIC
+              value: "station"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:StartFlightRecording:filename=/shared-directory/myrecording.jfr,duration=60s"
+      volumes:
+        - name: shared-volume
+          emptyDir: {}
+

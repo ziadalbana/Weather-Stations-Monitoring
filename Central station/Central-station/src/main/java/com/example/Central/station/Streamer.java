@@ -19,17 +19,17 @@ public class Streamer {
 
         KStream<String, String>[] branches = input
                 .branch(
-                        (key, value) -> someFilterCondition(key, value),
-                        (key, value) -> true
+                        (key, value) -> humidityCondition(key, value),
+                        (key, value) -> dropCondition(key,value)
                 );
 
         branches[0].to("alert");
-//        branches[1].to("station");
+        branches[1].to("dropped");
 
         return input;
     }
 
-    private boolean someFilterCondition(String key, String value) {
+    private boolean humidityCondition(String key, String value) {
         // Define your filtering logic here
         // Return true to keep the message, or false to drop it
         ObjectMapper objectMapper = new ObjectMapper();
@@ -39,7 +39,24 @@ public class Streamer {
             if (humidity>70) return true;
             else return false;
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            return false;
+        }
+    }
+    private boolean dropCondition(String key, String value) {
+        // Define your filtering logic here
+        // Return true to keep the message, or false to drop it
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            StationData stationData = objectMapper.readValue(value, StationData.class);
+            int humidity=stationData.getWeather().getHumidity();
+            int temperature=stationData.getWeather().getTemperature();
+            int wind=stationData.getWeather().getWindSpeed();
+            if (humidity<10) return true;
+            if(temperature<10) return true;
+            if(wind<10) return true;
+            else return false;
+        } catch (JsonProcessingException e) {
+            return false;
         }
     }
 

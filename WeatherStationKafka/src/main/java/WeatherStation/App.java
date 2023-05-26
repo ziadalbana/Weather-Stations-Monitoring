@@ -41,16 +41,31 @@ public class App
         
         // Call sendWeatherStatus for each station instance
 		WeatherStationMock station = new WeatherStationMock(1);
+		WeatherStationMock station1 = new WeatherStationMock(2);
+		WeatherStationMock station2 = new WeatherStationMock(3);
+		WeatherStationMock station3 = new WeatherStationMock(4);
+		WeatherStationMock station4 = new WeatherStationMock(5);
         while (true) {
 			station.sendWeatherStatus();
 			sendToKafka(station , producer);
 
+			station1.sendWeatherStatus();
+			sendToKafka(station1 , producer);
+
+			station2.sendWeatherStatus();
+			sendToKafka(station2 , producer);
+
+			station3.sendWeatherStatus();
+			sendToKafka(station3 , producer);
+
+			station4.sendWeatherStatus();
+			sendToKafka(station4 , producer);
             
-//            try {
-//                Thread.sleep(1000);  // wait 1 second between sending messages
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
+            try {
+                Thread.sleep(1000);  // wait 1 second between sending messages
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

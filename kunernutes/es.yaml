@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch-kibana-service
+spec:
+  ports:
+    - name: elasticsearch
+      port: 9200
+      targetPort: 9200
+    - name: kibana
+      port: 5601
+      targetPort: 5601
+  selector:
+    app: elasticsearch-kibana
+  type: NodePort
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch-kibana-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch-kibana
+  template:
+    metadata:
+      labels:
+        app: elasticsearch-kibana
+    spec:
+      containers:
+        - name: elasticsearch-kibana
+          image: nshou/elasticsearch-kibana
+          ports:
+            - containerPort: 9200
+            - containerPort: 5601
+          env:
+            - name: cluster.name
+              value: my-cluster
+            - name: network.host
+              value: 0.0.0.0
+            - name: ES_JAVA_OPTS
+              value: "-Xmx2g -Xms2g"
+            - name: xpack.security.enabled
+              value: "false"
+          volumeMounts:
+            - name: esdata
+              mountPath: /usr/share/elasticsearch/data
+      volumes:
+        - name: esdata
+          emptyDir: {}
+

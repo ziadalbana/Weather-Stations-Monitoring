@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kafka-producer
+  name: weather-station
 spec:
   replicas: 1
   selector:
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: kafka-producer
-          image: ziadalbana/weather-station:1.0
+          image: ziadalbana/weather-station:3.0
           imagePullPolicy: IfNotPresent
           env:
             # Add any environment variables required by your Kafka producer
