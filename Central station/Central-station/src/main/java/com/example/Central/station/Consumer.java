@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -14,22 +13,20 @@ import java.util.*;
 @Service
 public class Consumer {
 
-    private final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
-
     private final Map<Integer, List<StationData>> stations_records = new HashMap<>();
 
     int number_of_msg = 0;
 
-    Parquet parquet = new Parquet("./archive");
-    Bitcask bitcask = new Bitcask("./store");
+    Parquet parquet = new Parquet("shared-directory/archive");
+    Bitcask bitcask = new Bitcask("shared-directory/store");
 
     int droppedMsg = 0;
     int droppedFileNum=0;
-    Parquet droppedParquet = new Parquet("./DroppedArchive");
+    Parquet droppedParquet = new Parquet("shared-directory/DroppedArchive");
     List<StationData> droppedRecords=new ArrayList<>();
     int alertMsg = 0;
     int alertFileNum =0;
-    Parquet alertParquet = new Parquet("./AlertArchive");
+    Parquet alertParquet = new Parquet("shared-directory/AlertArchive");
     List<StationData> alertRecords =new ArrayList<>();
 
    @KafkaListener(topics = "station",
@@ -39,6 +36,8 @@ public class Consumer {
            }
    )
     public void BasicConsume(String msg){
+       if(msg.length() == 0)
+           return;
 
        try {
            ObjectMapper objectMapper = new ObjectMapper();
@@ -55,8 +54,17 @@ public class Consumer {
 
            this.number_of_msg++;
 
-           if(this.number_of_msg < 30)
+           if(this.number_of_msg < 10_000)
                return;
+
+           System.out.println("*****************************");
+           System.out.println("Bitcask values");
+           for (Integer id : stations_records.keySet()) {
+               System.out.println("station_id: " + id);
+               System.out.println("message: " + bitcask.get(String.valueOf(id)));
+               System.out.println();
+           }
+           System.out.println("*****************************");
 
            // write to parquet
            for (Integer id : stations_records.keySet()) {
@@ -118,7 +126,9 @@ public class Consumer {
             }
     )
     public void droppedConsume(String msg){
-        System.out.println("dropped"+msg+ "num"+droppedMsg);
+        if(msg.length() == 0)
+            return;
+        //System.out.println("dropped"+msg+ "num"+droppedMsg);
         ObjectMapper objectMapper = new ObjectMapper();
         StationData stationData = null;
         try {
@@ -145,7 +155,9 @@ public class Consumer {
             }
     )
     public void consume(String msg){
-        System.out.println(msg);
+        if(msg.length() == 0)
+            return;
+        //System.out.println(msg);
         ObjectMapper objectMapper = new ObjectMapper();
         StationData stationData = null;
         try {

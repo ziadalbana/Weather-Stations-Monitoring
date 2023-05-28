@@ -20,8 +20,9 @@ public class Bitcask {
         dir.mkdirs();
         this.index = new HashMap<>();
         this.fileNumber = 0;
-        if(recovery())
+        if (dir.listFiles().length > 0 && recovery()) {
             fileNumber++;
+        }
         initialize();
     }
 
